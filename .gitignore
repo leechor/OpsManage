@@ -10,7 +10,8 @@ media*
 .project
 .pydevproject
 *.log
-./logs/opsmanage.log
+/logs/
 .quarantine
 .msyh.ttf
 celerybeat.pid
+
