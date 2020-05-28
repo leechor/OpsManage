@@ -43,7 +43,7 @@ class SSH(threading.Thread):
             else:
                 data["status"] = 'success'
             return  data
-        except Exception,e:
+        except Exception as e:
             data["ip"] = self.hostname
             data["msg"] = str(e)
             data["status"] = 'faild'
@@ -59,7 +59,7 @@ class SSH(threading.Thread):
             data["status"] = 'success'
             data["msg"] = ""
             return data
-        except Exception,e:
+        except Exception as e:
             data["ip"] = self.hostname
             data["status"] = 'failed'
             data["msg"] = str(e)
@@ -77,7 +77,7 @@ class SSH(threading.Thread):
             else:
                 sftp.get(remotePath+remoteFile,localPath+remoteFile)            
             return True
-        except Exception,e:
+        except Exception as e:
             return False 
 
     def stop(self):

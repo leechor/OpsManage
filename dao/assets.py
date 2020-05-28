@@ -13,7 +13,7 @@ from account.models import User,Structure
 from utils.logger import logger
 from dao.base import DataHandle
 from django.http import QueryDict
-from libs.ansible.runner import ANSRunner
+from libs.ansible.runner_new import ANSRunner
 from cicd.models import Project_Config
 from django.db.models import Q
 
@@ -808,12 +808,12 @@ class AssetsSource(object):
             sList,resource = self.idSourceList(ids=request.POST.getlist('ids[]'))
             ANS = ANSRunner(resource)  
             ANS.run_model(host_list=sList,module_name='setup',module_args="") 
-            data = ANS.handle_cmdb_data(ANS.get_model_result())            
+            data = ANS.handle_cmdb_data(ANS.get_model_result())
         elif request.POST.get('model')=='setup':
             sList,resource = self.idSource(ids=request.POST.get('ids'))
             ANS = ANSRunner(resource)  
             ANS.run_model(host_list=sList,module_name='setup',module_args="")  
-            data = ANS.handle_cmdb_data(ANS.get_model_result())           
+            data = ANS.handle_cmdb_data(ANS.get_model_result())
         else:
             sList,resource = self.idSource(ids=request.POST.get('ids'))
             ANS = ANSRunner(resource)  
@@ -824,50 +824,51 @@ class AssetsSource(object):
     def batch(self,request):  
         return self.setup(request)
     
-    def setup(self,request):  
-        sList,fList = [],[]
-        data,result = self.get_data(request) 
-        if data:                  
-            for ds in data:
-                status = ds.get('status')
-                sip = ds.get('ip') 
-                if status == 0:
-                    assets = Server_Assets.objects.get(ip=ds.get('ip')).assets
-                    assets.model = ds.get('model')
-                    assets.save()
-                    try:
-                        Server_Assets.objects.filter(ip=ds.get('ip')).update(cpu_number=ds.get('cpu_number'),kernel=ds.get('kernel'),
-                                                                              selinux=ds.get('selinux'),hostname=ds.get('hostname'),
-                                                                              system=ds.get('system'),cpu=ds.get('cpu'),
-                                                                              disk_total=ds.get('disk_total'),cpu_core=ds.get('cpu_core'),
-                                                                              swap=ds.get('swap'),ram_total=ds.get('ram_total'),
-                                                                              vcpu_number=ds.get('vcpu_number')
-                                                                            )
-                        if sip not in sList:sList.append(sip)
-                    except Exception:
-                        if sip not in fList:fList.append(sip) 
-                    for nk in ds.get('nks'):
-                        macaddress = nk.get('macaddress')
-                        count = NetworkCard_Assets.objects.filter(assets=assets,macaddress=macaddress).count()
-                        if count > 0:
-                            try:
-                                NetworkCard_Assets.objects.filter(assets=assets,macaddress=macaddress).update(assets=assets,device=nk.get('device'),
-                                                                                                                   ip=nk.get('address'),module=nk.get('module'),
-                                                                                                                   mtu=nk.get('mtu'),active=nk.get('active'))
-                            except Exception as ex:
-                                logger.warn(msg="更新服务器网卡资产失败: {ex}".format(ex=str(ex)))
-                        else:
-                            try:
-                                NetworkCard_Assets.objects.create(assets=assets,device=nk.get('device'),
-                                                              macaddress=nk.get('macaddress'),
-                                                              ip=nk.get('address'),module=nk.get('module'),
-                                                              mtu=nk.get('mtu'),active=nk.get('active'))
-                            except Exception as ex:
-                                logger.warn(msg="更新写入服务器网卡资产失败: {ex}".format(ex=str(ex)))                         
-                else:
-                    if sip not in fList:fList.append(sip) 
-                    logger.warn(msg="获取主机信息失败: {ex}".format(ex=str(result)))   
-            return fList,sList
+    # def setup(self,request):
+    #
+    #     sList,fList = [],[]
+    #     data,result = self.get_data(request)
+    #     if data:
+    #         for ds in data:
+    #             status = ds.get('status')
+    #             sip = ds.get('ip')
+    #             if status == 0:
+    #                 assets = Server_Assets.objects.get(ip=ds.get('ip')).assets
+    #                 assets.model = ds.get('model')
+    #                 assets.save()
+    #                 try:
+    #                     Server_Assets.objects.filter(ip=ds.get('ip')).update(cpu_number=ds.get('cpu_number'),kernel=ds.get('kernel'),
+    #                                                                           selinux=ds.get('selinux'),hostname=ds.get('hostname'),
+    #                                                                           system=ds.get('system'),cpu=ds.get('cpu'),
+    #                                                                           disk_total=ds.get('disk_total'),cpu_core=ds.get('cpu_core'),
+    #                                                                           swap=ds.get('swap'),ram_total=ds.get('ram_total'),
+    #                                                                           vcpu_number=ds.get('vcpu_number')
+    #                                                                         )
+    #                     if sip not in sList:sList.append(sip)
+    #                 except Exception:
+    #                     if sip not in fList:fList.append(sip)
+    #                 for nk in ds.get('nks'):
+    #                     macaddress = nk.get('macaddress')
+    #                     count = NetworkCard_Assets.objects.filter(assets=assets,macaddress=macaddress).count()
+    #                     if count > 0:
+    #                         try:
+    #                             NetworkCard_Assets.objects.filter(assets=assets,macaddress=macaddress).update(assets=assets,device=nk.get('device'),
+    #                                                                                                                ip=nk.get('address'),module=nk.get('module'),
+    #                                                                                                                mtu=nk.get('mtu'),active=nk.get('active'))
+    #                         except Exception as ex:
+    #                             logger.warn(msg="更新服务器网卡资产失败: {ex}".format(ex=str(ex)))
+    #                     else:
+    #                         try:
+    #                             NetworkCard_Assets.objects.create(assets=assets,device=nk.get('device'),
+    #                                                           macaddress=nk.get('macaddress'),
+    #                                                           ip=nk.get('address'),module=nk.get('module'),
+    #                                                           mtu=nk.get('mtu'),active=nk.get('active'))
+    #                         except Exception as ex:
+    #                             logger.warn(msg="更新写入服务器网卡资产失败: {ex}".format(ex=str(ex)))
+    #             else:
+    #                 if sip not in fList:fList.append(sip)
+    #                 logger.warn(msg="获取主机信息失败: {ex}".format(ex=str(result)))
+    #         return fList,sList
     
     
     def crawHw(self,request):  

@@ -2,6 +2,9 @@
 # -*- coding=utf-8 -*-
 import os,re
 from collections import Mapping,namedtuple
+from tempfile import TemporaryDirectory
+
+import ansible_runner
 from ansible import constants
 from ansible.playbook.play import Play
 from ansible.vars.manager import VariableManager
@@ -11,6 +14,8 @@ from ansible.parsing.dataloader import DataLoader
 from ansible.executor.playbook_executor import PlaybookExecutor
 from ansible.utils.vars import load_extra_vars
 from ansible.utils.vars import load_options_vars
+
+
 from .callback import *
 from .inventory import get_inventory
 
@@ -128,8 +133,8 @@ class ANSRunner(object):
             if tqm is not None:  
                 tqm.cleanup()  
             if self.loader:
-                self.loader.cleanup_all_tmp_files()  
-  
+                self.loader.cleanup_all_tmp_files()
+
     def run_playbook(self, host_list, playbook_path,extra_vars=dict()): 
         """ 
         run ansible palybook 

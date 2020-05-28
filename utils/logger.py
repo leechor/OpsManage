@@ -1,7 +1,10 @@
 #!/usr/bin/env python
 #coding:utf-8
 import logging.config
-logging.config.fileConfig("./conf/logger.ini")
+import os
+
+file_path = os.path.dirname(os.path.abspath(__file__))
+logging.config.fileConfig(os.path.dirname(file_path) + "/conf/logger.ini")
 logger = logging.getLogger("opsmanage")
 
 
