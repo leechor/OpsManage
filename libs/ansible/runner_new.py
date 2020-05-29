@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import json
+import os
 import re
 from tempfile import TemporaryDirectory
 
@@ -67,18 +68,11 @@ class ANSRunner:
 
     def run_model(self, host_list, module_name, module_args):
         # self.callback = adhoc_callback(self.websocket, self.background)
-        pattern = 'module'
-        inventory = f'[{pattern}]\n'
-        if isinstance(host_list, str):
-            inventory += host_list
-        elif isinstance(host_list, list):
-            inventory += '\n'.join(host_list)
-        else:
-            logger.error("host_list format error")
-            return
+
+        inventory = self._format_host(host_list)
         try:
             with TemporaryDirectory() as d:
-                self.runner = ansible_runner.run(private_data_dir='./playbook',
+                self.runner = ansible_runner.run(private_data_dir='/Users/sunlichao/project/python/OpsManage/playbook',
                                                  host_pattern=self.pattern,
                                                  inventory=inventory,
                                                  module=module_name,
@@ -95,7 +89,37 @@ class ANSRunner:
             logger.error(msg=f"run model failed: {str(err)}")
 
     def run_playbook(self, host_list, playbook_path, extra_vars):
-        pass
+        inventory = self._format_host(host_list)
+        try:
+            dir_path = os.path.dirname(playbook_path)
+            file_name = os.path.basename(playbook_path)
+            self.runner = ansible_runner.run(private_data_dir=dir_path,
+                                             playbook=file_name,
+                                             inventory=inventory,
+                                             extravars=extra_vars,
+                                             event_handler=event_handler,
+                                             cancel_callback=cancel_callback,
+                                             finished_callback=finished_callback,
+                                             status_handler=status_handler
+                                             )
+            pass
+        except Exception as err:
+            logger.error(msg="run playbook failed: {err}".format(err=str(err)))
+            if self.websocket:
+                self.websocket.send(str(err))
+            return False
+
+    @staticmethod
+    def _format_host(host_list):
+        pattern = 'module'
+        inventory = f'[{pattern}]\n'
+        if isinstance(host_list, str):
+            inventory += host_list
+        elif isinstance(host_list, list):
+            inventory += '\n'.join(host_list)
+        else:
+            logger.error("host_list format error")
+        return inventory
 
     def get_model_result(self):
         self.results_raw = {'success': {}, 'failed': {}, 'unreachable': {}}
@@ -180,4 +204,4 @@ class ANSRunner:
 
 if __name__ == '__main__':
     ans_runner = ANSRunner()
-    ans_runner.run_model(['127.0.0.1', '127.0.0.1'], "shell", 'whoami')
+    ans_runner.run_model(['127.0.0.1', '172.17.32.6'], "shell", 'whoami')
