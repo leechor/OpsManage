@@ -6,7 +6,7 @@ from tempfile import TemporaryDirectory
 
 import ansible_runner
 
-from libs.ansible.callback_new import PlayBookResultsCollectorWebSocket
+from libs.ansible.callback_new import ResultsCollectorWebSocket
 from utils.logger import logger
 
 
@@ -49,16 +49,15 @@ class ANSRunner:
         self.background = background
         self.passwords = passwords or {}
         self.runner = None
-        self.callback = PlayBookResultsCollectorWebSocket(websocket)
+        self.callback = ResultsCollectorWebSocket(websocket)
 
     def run_model(self, host_list, module_name, module_args):
-        # self.callback = adhoc_callback(self.websocket, self.background)
 
         inventory = self._format_host(host_list)
         try:
             with TemporaryDirectory() as d:
                 self.runner = ansible_runner.run(
-                    private_data_dir='/Users/sunlichao/project/python/OpsManage/playbook' + d,
+                    private_data_dir=d,
                     host_pattern=self.pattern,
                     inventory=inventory,
                     module=module_name,
@@ -133,8 +132,7 @@ class ANSRunner:
         return inventory
 
     def get_model_result(self):
-        self.results_raw = {'success': {}, 'failed': {}, 'unreachable': {}}
-        return json.dumps(self.results_raw, indent=4)
+        pass
 
     def handle_cmdb_data(self, data):
         """处理setup返回结果方法"""
