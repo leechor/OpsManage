@@ -14,4 +14,4 @@ media*
 .quarantine
 .msyh.ttf
 celerybeat.pid
-
+playbook/

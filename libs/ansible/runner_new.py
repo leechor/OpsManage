@@ -6,24 +6,8 @@ from tempfile import TemporaryDirectory
 
 import ansible_runner
 
+from libs.ansible.callback_new import PlayBookResultsCollectorWebSocket
 from utils.logger import logger
-
-
-def event_handler(event):
-    pass
-
-
-def cancel_callback():
-    pass
-
-
-def finished_callback(result):
-    logger.info(result)
-    logger.info("finished.")
-
-
-def status_handler(status, runner_config):
-    pass
 
 
 class ANSRunner:
@@ -65,6 +49,7 @@ class ANSRunner:
         self.background = background
         self.passwords = passwords or {}
         self.runner = None
+        self.callback = PlayBookResultsCollectorWebSocket(websocket)
 
     def run_model(self, host_list, module_name, module_args):
         # self.callback = adhoc_callback(self.websocket, self.background)
@@ -72,17 +57,18 @@ class ANSRunner:
         inventory = self._format_host(host_list)
         try:
             with TemporaryDirectory() as d:
-                self.runner = ansible_runner.run(private_data_dir='/Users/sunlichao/project/python/OpsManage/playbook',
-                                                 host_pattern=self.pattern,
-                                                 inventory=inventory,
-                                                 module=module_name,
-                                                 module_args=module_args,
-                                                 extravars=self.extra_vars,
-                                                 event_handler=event_handler,
-                                                 cancel_callback=cancel_callback,
-                                                 finished_callback=finished_callback,
-                                                 status_handler=status_handler
-                                                 )
+                self.runner = ansible_runner.run(
+                    private_data_dir='/Users/sunlichao/project/python/OpsManage/playbook' + d,
+                    host_pattern=self.pattern,
+                    inventory=inventory,
+                    module=module_name,
+                    module_args=module_args,
+                    extravars=self.extra_vars,
+                    event_handler=self.event_handler(),
+                    cancel_callback=self.cancel_callback(),
+                    finished_callback=self.finished_callback(),
+                    status_handler=self.status_handler()
+                    )
 
                 pass
         except Exception as err:
@@ -97,17 +83,42 @@ class ANSRunner:
                                              playbook=file_name,
                                              inventory=inventory,
                                              extravars=extra_vars,
-                                             event_handler=event_handler,
-                                             cancel_callback=cancel_callback,
-                                             finished_callback=finished_callback,
-                                             status_handler=status_handler
+                                             event_handler=self.event_handler(),
+                                             cancel_callback=self.cancel_callback(),
+                                             finished_callback=self.finished_callback(),
+                                             status_handler=self.status_handler()
                                              )
-            pass
+            logger.info(f'执行结果: {self.runner.status}')
         except Exception as err:
             logger.error(msg="run playbook failed: {err}".format(err=str(err)))
             if self.websocket:
                 self.websocket.send(str(err))
             return False
+
+    def event_handler(self):
+        def _event_handler(event):
+            self.callback.format_event(event)
+
+        return _event_handler
+
+    def cancel_callback(self):
+        def _cancel_callback():
+            pass
+
+        return _cancel_callback
+
+    def finished_callback(self):
+        def _finished_callback(result):
+            logger.info(result)
+            logger.info("finished.")
+
+        return _finished_callback
+
+    def status_handler(self):
+        def _status_handler(status, runner_config):
+            pass
+
+        return _status_handler
 
     @staticmethod
     def _format_host(host_list):
