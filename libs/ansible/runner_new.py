@@ -124,7 +124,11 @@ class ANSRunner:
         pattern = 'module'
         inventory = f'[{pattern}]\n'
         for host in self.hosts:
-            inventory += f'{host["ip"]} ansible_ssh_user={host["username"]} ansible_ssh_pass={host["password"]}\n'
+            inventory += f'{host["ip"]}'
+            if "password" in host.keys():
+                inventory += f' ansible_user={host["username"]} ansible_password={host["password"]}\n'
+            elif "private_key" in host.keys():
+                inventory += f' ansible_password={host["private_key"]}\n'
         return inventory
     def get_model_result(self):
         pass
