@@ -16,3 +16,4 @@ media*
 celerybeat.pid
 playbook/
 /out/
+.idea
