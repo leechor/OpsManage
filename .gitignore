@@ -15,3 +15,4 @@ media*
 .msyh.ttf
 celerybeat.pid
 playbook/
+/out/

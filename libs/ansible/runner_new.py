@@ -39,6 +39,7 @@ class ANSRunner:
                  syntax=False,
                  websocket=None,
                  background=None):
+        self.hosts = hosts
         self.extra_vars = extra_vars
         self.results_raw = {}
         self.pattern = pattern
@@ -53,7 +54,7 @@ class ANSRunner:
 
     def run_model(self, host_list, module_name, module_args):
 
-        inventory = self._format_host(host_list)
+        inventory = self._format_host()
         try:
             with TemporaryDirectory() as d:
                 self.runner = ansible_runner.run(
@@ -74,7 +75,7 @@ class ANSRunner:
             logger.error(msg=f"run model failed: {str(err)}")
 
     def run_playbook(self, host_list, playbook_path, extra_vars):
-        inventory = self._format_host(host_list)
+        inventory = self._format_host()
         try:
             dir_path = os.path.dirname(playbook_path)
             file_name = os.path.basename(playbook_path)
@@ -119,18 +120,12 @@ class ANSRunner:
 
         return _status_handler
 
-    @staticmethod
-    def _format_host(host_list):
+    def _format_host(self):
         pattern = 'module'
         inventory = f'[{pattern}]\n'
-        if isinstance(host_list, str):
-            inventory += host_list
-        elif isinstance(host_list, list):
-            inventory += '\n'.join(host_list)
-        else:
-            logger.error("host_list format error")
+        for host in self.hosts:
+            inventory += f'{host["ip"]} ansible_ssh_user={host["username"]} ansible_ssh_pass={host["password"]}\n'
         return inventory
-
     def get_model_result(self):
         pass
 
