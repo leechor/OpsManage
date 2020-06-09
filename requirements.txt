@@ -17,6 +17,7 @@ celery==4.4.2
 certifi==2020.4.5.1
 cffi==1.14.0
 channels==2.4.0
+channels-redis==2.4.2
 chardet==3.0.4
 click==7.1.2
 configparser==5.0.0
@@ -53,6 +54,8 @@ ldap3==2.7
 legacy==0.1.6
 lockfile==0.12.2
 MarkupSafe==1.1.1
+msgpack==0.6.2
+msgpack-python==0.5.6
 mysql-connector-python==8.0.20
 mysql-replication==0.21
 mysqlclient==1.4.6
@@ -60,6 +63,7 @@ paramiko==2.7.1
 pexpect==4.8.0
 Pillow==7.1.2
 ply==3.11
+prettytable==0.7.2
 protobuf==3.12.1
 psutil==5.7.0
 ptyprocess==0.6.0
