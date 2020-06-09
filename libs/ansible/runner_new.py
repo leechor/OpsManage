@@ -125,6 +125,7 @@ class ANSRunner:
         inventory = f'[{pattern}]\n'
         for host in self.hosts:
             inventory += f'{host["ip"]}'
+            inventory += f' ansible_port={host["port"]}'
             if "password" in host.keys():
                 inventory += f' ansible_user={host["username"]} ansible_password={host["password"]}\n'
             elif "private_key" in host.keys():
