@@ -123,7 +123,14 @@ class ANSRunner:
     def _format_host(self):
         pattern = 'module'
         inventory = f'[{pattern}]\n'
-        for host in self.hosts:
+        hosts = []
+        if isinstance(self.hosts, list):
+            hosts = self.hosts
+        elif isinstance(self.hosts, dict):
+            for k in self.hosts:
+                for k2 in self.hosts[k]:
+                    hosts = self.hosts[k][k2]
+        for host in hosts:
             inventory += f'{host["ip"]}'
             inventory += f' ansible_port={host["port"]}'
             if "password" in host.keys():
